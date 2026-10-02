@@ -1,0 +1,14 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="starGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#EAA6FA" />
+      <stop offset="45%" stop-color="#D4B5FF" />
+      <stop offset="80%" stop-color="#C5DEFF" />
+      <stop offset="100%" stop-color="#DDF5EB" />
+    </linearGradient>
+  </defs>
+  <!-- Outer 4-Point Star -->
+  <path d="M100 0 Q100 100 200 100 Q100 100 100 200 Q100 100 0 100 Q100 100 100 0 Z" fill="url(#starGrad)" />
+  <!-- Inner Center Cutout Star -->
+  <path d="M100 86 Q100 100 114 100 Q100 100 100 114 Q100 100 86 100 Q100 100 100 86 Z" fill="#000000" />
+</svg>

@@ -2,337 +2,372 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { SectionHead } from '@/components/common/SectionHead';
-import { EstadoDeErro } from '@/components/common/EstadoDeErro';
 import { contentService } from '@/services/contentService';
-import { teamService } from '@/services/teamService';
-import { Content, Team } from '@/types';
+import { Content } from '@/types';
+import { FluidGlassSculpture } from '@/components/common/FluidGlassSculpture';
+import { SyntheticaButton } from '@/components/ui/SyntheticaButton';
 
-/* Textos enxutos: uma linha por item. A versão longa de cada conceito vive
-   nos ensaios de /descobrir, e repeti-la aqui era o excesso de informação.
-
-   Cada pilar diz o que mudou até 2047 e o que continua igual. É a tese da
-   página: o esporte cresceu sem trocar o que ele é. Sem número cravado de
-   velocidade ou público, que seria dado inventado. */
-const pillars = [
-  { num: '01', title: 'Velocidade', desc: 'Arrancada explosiva na tração de oito rodas, sem motor e sem auxílio. A física é a mesma de vinte anos atrás.' },
-  { num: '02', title: 'Estratégia', desc: 'Atacar e defender no mesmo instante, em jams de até dois minutos. O que ficou mais rápido foi a remontagem do pack.' },
-  { num: '03', title: 'Contato', desc: 'Bloqueio com torso, quadril e ombro, dentro de zonas legais milimétricas. A arbitragem virou assistida, o julgamento continua humano.' },
-  { num: '04', title: 'Comunidade', desc: 'Ginásio cheio e calendário fechado, com a assembleia de atletas ainda decidindo as regras.' },
+const acervoCards = [
+  {
+    num: '01',
+    title: 'Tática & Formações',
+    desc: 'Estratégias de trípode defensivo, passe de estrela da jammer para a pivô e reciclagem de bloqueadoras no pack.',
+    link: '/descobrir?categoria=tatica',
+  },
+  {
+    num: '02',
+    title: 'Equipamento & Patins',
+    desc: 'Guia completo de dureza de rodas de poliuretano, regulagem de trucks, joelheiras de alto impacto e protetor bucal.',
+    link: '/descobrir?categoria=equipamentos',
+  },
+  {
+    num: '03',
+    title: 'Regras & Arbitragem',
+    desc: 'Manual atualizado do WFTDA, zonas legais de impacto, faltas de corte de pista e sinalização de arbitragem.',
+    link: '/descobrir?categoria=regras',
+  },
+  {
+    num: '04',
+    title: 'Cultura & Comunidade',
+    desc: 'História das ligas autogestionadas, representatividade de gênero, escolha de derby names e inclusão.',
+    link: '/descobrir?categoria=comunidade',
+  },
 ];
 
-const steps = [
-  { num: '01', title: 'Descubra', desc: 'Entenda o pack, as regras e a linguagem da pista plana.' },
-  { num: '02', title: 'Experimente', desc: 'Calce patins quad e aprenda a cair em quatro apoios. Continua sendo a primeira aula.' },
-  { num: '03', title: 'Encontre uma liga', desc: 'Do galpão de bairro ao ginásio de temporada, quase toda cidade tem a sua.' },
-  { num: '04', title: 'Vá a um treino', desc: 'Inscreva-se no Fresh Meat. Nenhuma experiência exigida, e a proteção sai do acervo da liga.' },
-  { num: '05', title: 'Entre na pista', desc: 'Passe no Minimal Skills, escolha seu derby name e jogue.' },
+const processRows = [
+  {
+    title: 'ENTENDA',
+    desc: 'Estude as regras básicas do flat track e assista aos primeiros bouts gravados do nosso acervo.',
+  },
+  {
+    title: 'EXPERIMENTE',
+    desc: 'Participe de uma aula aberta do programa Fresh Meat e aprenda a cair com segurança em quatro apoios.',
+  },
+  {
+    title: 'ENCONTRE UMA LIGA',
+    desc: 'Localize a liga autogestionada mais próxima do seu município e agende um treino de boas-vindas.',
+  },
+  {
+    title: 'ENTRE NA PISTA',
+    desc: 'Passe no teste de habilidades mínimas (Minimum Skills), registre seu derby name e jogue seu primeiro jam.',
+  },
 ];
 
 export default function Home() {
   const [featured, setFeatured] = useState<Content | null>(null);
-  const [secondary, setSecondary] = useState<Content[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [erroDoAcervo, setErroDoAcervo] = useState<string | null>(null);
-  /* Só existe para o botão de nova tentativa reexecutar o efeito do acervo. */
-  const [tentativa, setTentativa] = useState(0);
+  const [formSubmitted, setFormSubmitted] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
+  const [formData, setFormData] = useState({
+    nome: '',
+    email: '',
+    telefone: '',
+    cidade: '',
+    mensagem: '',
+  });
 
-  /* As ligas saem de dado local e sempre respondem. Carregar em efeito
-     separado do acervo é o que impede uma falha da API de apagar a seção
-     delas junto: no Promise.all antigo, uma rejeição levava as duas. */
+  // Parallax Scroll Listener
   useEffect(() => {
-    teamService.getTeams().then((ligas) => setTeams(ligas.slice(0, 5)));
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setScrollY(window.scrollY);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   useEffect(() => {
     let cancelado = false;
-
     async function carregarAcervo() {
-      setErroDoAcervo(null);
-
       try {
-        const [destaque, conteudos] = await Promise.all([
-          contentService.getFeaturedContent(),
-          contentService.getContents(),
-        ]);
-
-        if (cancelado) return;
-
-        setFeatured(destaque);
-        setSecondary(conteudos.filter((item) => item.slug !== destaque?.slug).slice(0, 3));
-      } catch (falha) {
-        if (cancelado) return;
-
-        setErroDoAcervo(falha instanceof Error ? falha.message : 'O acervo não respondeu.');
-        setFeatured(null);
-        setSecondary([]);
+        const destaque = await contentService.getFeaturedContent();
+        if (!cancelado) setFeatured(destaque);
+      } catch (e) {
+        // Fallback
       }
     }
-
     carregarAcervo();
     return () => {
       cancelado = true;
     };
-  }, [tentativa]);
+  }, []);
+
+  const handleSubmitForm = (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormSubmitted(true);
+  };
+
+  // Parallax Offsets
+  const textParallax = scrollY * 0.12;
+  const sculptureParallax = scrollY * -0.06;
+  const heroOpacity = Math.max(0, 1 - scrollY / 750);
 
   return (
-    <div>
+    <div className="space-y-40 pt-28 pb-24 px-6 sm:px-12 w-[88vw] max-w-[1650px] mx-auto text-white">
       {/* ===================================================
-          HERÓI: a única imagem da página, malha em fuga
+          1. HERO SECTION (Capacete)
           =================================================== */}
-      {/* A malha ocupa a faixa inferior e o texto vive acima dela: o padding
-          reserva o espaço, então a linha do horizonte nunca corta o título. */}
-      <section className="relative min-h-screen overflow-hidden px-6 sm:px-8 pt-40 pb-[38vh]">
-        <div className="sw-mesh h-[34vh]" />
-        <div className="absolute left-0 right-0 bottom-[34vh] h-px sw-horizon opacity-60" />
-
-        <div className="relative z-10 max-w-6xl mx-auto w-full">
-          {/* 9vw, não 11: em 390px de largura "SYNTHETICA" mais o tracking
-              estouravam a caixa e a última letra era cortada. */}
-          <h1 className="text-[clamp(1.9rem,9vw,6rem)] leading-[0.94]">
-            <span className="block font-bold text-white">Derby</span>
-            <span className="block font-medium text-accent tracking-[0.1em]">Synthetica</span>
+      <section className="min-h-[85vh] grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10 pt-4">
+        {/* Coluna Esquerda: Texto */}
+        <div
+          className="lg:col-span-7 space-y-8 transition-transform ease-out duration-75 pr-2"
+          style={{
+            transform: `translate3d(0, ${textParallax}px, 0)`,
+            opacity: heroOpacity,
+          }}
+        >
+          <h1 className="text-[clamp(2.5rem,5.8vw,5.5rem)] font-display font-extrabold tracking-tight uppercase leading-[0.95] text-white whitespace-nowrap">
+            <span className="block text-white">DERBY</span>
+            <span className="block text-white">SYNTHETICA</span>
           </h1>
 
-          <p className="sw-caret mt-8 font-mono text-[11px] sm:text-xs uppercase tracking-[0.3em] text-ink/60">
-            Temporada 2047 · Flat track
+          <p className="text-slate-300 font-body text-base sm:text-xl leading-relaxed max-w-xl">
+            Vinte anos atrás era esporte de galpão alugado e ingresso vendido na porta. Hoje enche ginásios. A próxima evolução do flat track roller derby com arbitragem assistida por laser e autogestão de atletas.
           </p>
 
-          {/* A moldura da ficção precisa ser estabelecida na primeira tela, e o
-              jeito de fazer isso sem legenda explicativa é o contraste: o que
-              era, o que é, e a coisa que não mudou no meio. */}
-          <p className="mt-6 text-ink/45 text-[13px] leading-relaxed max-w-md">
-            Vinte anos atrás era esporte de galpão alugado e ingresso vendido na porta.
-            Hoje enche ginásio. A assembleia de atletas continua decidindo as regras.
-          </p>
+          <div className="pt-2">
+            <SyntheticaButton href="/descobrir" badgeBg="bg-cyan-400" badgeTextColor="text-black">
+              EXPLORAR A PLATAFORMA
+            </SyntheticaButton>
+          </div>
 
-          <div className="mt-10 flex flex-wrap items-center gap-5">
-            <Link href="/descobrir" className="sw-btn sw-btn-solid px-7 py-3">
-              Descubra o esporte
-            </Link>
-            <Link
-              href="/conectar"
-              className="font-mono text-[11px] uppercase tracking-[0.2em] text-ink/50 hover:text-accent transition-colors"
-            >
-              Ver as ligas →
-            </Link>
+          <div className="pt-8 flex items-center gap-3 text-cyan-400">
+            <span className="w-8 h-8 rounded-full border border-cyan-400/40 flex items-center justify-center text-xs animate-bounce">
+              ↓
+            </span>
+            <span className="font-mono tracking-widest uppercase text-[11px]">ROLE PARA EXPLORAR</span>
+          </div>
+        </div>
+
+        {/* Coluna Direita: Capacete em Destaque */}
+        <div
+          className="lg:col-span-5 relative flex items-center justify-center transition-transform ease-out duration-75"
+          style={{
+            transform: `translate3d(0, ${sculptureParallax}px, 0)`,
+          }}
+        >
+          <div className="relative z-10 w-full">
+            <FluidGlassSculpture variant="capacete" alt="Capacete Derby Synthetica" />
           </div>
         </div>
       </section>
 
       {/* ===================================================
-          01: O ESPORTE (era uma grade de quatro cartões)
+          2. QUEM SOMOS (Patins)
           =================================================== */}
-      <section className="px-6 sm:px-8 py-16">
-        <div className="max-w-6xl mx-auto">
-          <SectionHead
-            title="Por que ele cresceu"
-            deck="Não é corrida nem teatro coreografado. É combate tático sem bola, onde cada corpo é escudo, aríete e pontuador ao mesmo tempo. Isso nunca mudou, e é exatamente o que encheu a arquibancada."
-          />
+      <section className="relative min-h-[75vh] grid grid-cols-1 lg:grid-cols-12 gap-12 items-center pt-8">
+        <div className="absolute top-0 right-0 font-display text-[clamp(6rem,22vw,16rem)] font-extrabold uppercase text-white/[0.03] select-none pointer-events-none leading-none z-0">
+          DERBY
+        </div>
 
-          <div className="border-t border-accent/16">
-            {pillars.map((pillar) => (
-              <div
-                key={pillar.title}
-                className="sw-row flex-col sm:flex-row sm:items-baseline gap-2 sm:gap-10 py-6"
-              >
-                <div className="flex items-baseline gap-4 sm:w-52 shrink-0">
-                  <span className="sw-idx text-[11px]">{pillar.num}</span>
-                  <span className="font-mono text-xs uppercase tracking-[0.2em] text-white">
-                    {pillar.title}
-                  </span>
-                </div>
-                <p className="text-ink/50 text-[13px] leading-relaxed max-w-xl">{pillar.desc}</p>
-              </div>
-            ))}
+        <div className="lg:col-span-5 relative z-10 flex items-center justify-center">
+          <div className="relative z-10 w-full">
+            <FluidGlassSculpture variant="patins" alt="Patins Derby Synthetica" />
           </div>
         </div>
-      </section>
 
-      {/* ===================================================
-          02: ACERVO, um destaque emoldurado, o resto em fileira
-          =================================================== */}
-      <section className="px-6 sm:px-8 py-16">
-        <div className="max-w-6xl mx-auto">
-          <SectionHead
-            title="Descubra a pista"
-            deck="Ensaios autorais sobre tática, equipamento, arbitragem e a cultura escrita do flat track."
-            action={
-              <Link
-                href="/descobrir"
-                className="font-mono text-[11px] uppercase tracking-[0.2em] text-ink/50 hover:text-accent transition-colors whitespace-nowrap"
-              >
-                Ver todos →
-              </Link>
-            }
-          />
-
-          {/* A falha fica contida nesta seção: o herói, os pilares, as ligas e
-              o guia continuam na tela, porque não dependem da API. */}
-          {erroDoAcervo && (
-            <EstadoDeErro
-              className="py-4"
-              titulo="Acervo fora de alcance"
-              mensagem={erroDoAcervo}
-              onTentarDeNovo={() => setTentativa((numero) => numero + 1)}
-            />
-          )}
-
-          {featured && (
-            <Link
-              href={`/conteudo/${featured.slug}`}
-              className="sw-frame sw-frame-live sw-ticks block p-8 sm:p-12 mb-12"
-            >
-              <div className="flex items-baseline justify-between gap-4 mb-8">
-                <span className="sw-tag">{featured.categoryName}</span>
-                <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink/30">
-                  {featured.readTime}
-                </span>
-              </div>
-
-              <h3 className="text-xl sm:text-3xl leading-snug tracking-[0.02em] max-w-2xl normal-case">
-                {featured.title}
-              </h3>
-
-              <p className="mt-5 text-ink/50 text-[13px] sm:text-sm leading-relaxed max-w-2xl">
-                {featured.subtitle}
-              </p>
-
-              <div className="mt-10 pt-5 sw-rule flex items-baseline justify-between gap-4">
-                <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink/40">
-                  {featured.author}
-                </span>
-                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-accent">
-                  Ler ensaio →
-                </span>
-              </div>
-            </Link>
-          )}
-
-          {/* Condicionado à lista porque o fio de topo, sozinho, apareceria
-              como um traço solto quando o acervo não carrega. */}
-          {secondary.length > 0 && (
-            <div className="border-t border-accent/16">
-              {secondary.map((content, idx) => (
-                <Link
-                  key={content.id}
-                  href={`/conteudo/${content.slug}`}
-                  className="sw-row group flex-col sm:flex-row sm:items-baseline gap-2 sm:gap-6 py-5"
-                >
-                  <span className="sw-idx text-[11px] w-8 shrink-0">
-                    {String(idx + 2).padStart(2, '0')}
-                  </span>
-                  <span className="text-sm text-ink/85 group-hover:text-white transition-colors max-w-lg">
-                    {content.title}
-                  </span>
-                  <span className="sw-leader hidden sm:block" />
-                  <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink/30 whitespace-nowrap">
-                    {content.categoryName} · {content.readTime}
-                  </span>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* ===================================================
-          03: LIGAS, índice, não cartões
-          =================================================== */}
-      <section className="px-6 sm:px-8 py-16">
-        <div className="max-w-6xl mx-auto">
-          <SectionHead
-            title="Conecte-se"
-            deck="Ligas independentes por todo o Brasil, do galpão de bairro ao ginásio de temporada, abertas a novas patinadoras, arbitragem e torcida."
-            action={
-              <Link
-                href="/conectar"
-                className="font-mono text-[11px] uppercase tracking-[0.2em] text-ink/50 hover:text-accent transition-colors whitespace-nowrap"
-              >
-                Mapa completo →
-              </Link>
-            }
-          />
-
-          <div className="border-t border-accent/16">
-            {teams.map((team) => (
-              <Link
-                key={team.id}
-                href="/conectar"
-                className="sw-row group flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-6 py-5"
-              >
-                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-accent/75 sm:w-40 shrink-0">
-                  {team.city}
-                </span>
-                <span className="text-sm text-ink/85 group-hover:text-white transition-colors">
-                  {team.name}
-                </span>
-                <span className="sw-leader hidden sm:block" />
-                <span className="font-mono text-[10px] tabular-nums tracking-[0.16em] text-ink/30">
-                  {team.foundedYear}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ===================================================
-          04: COMEÇAR (era uma grade de cinco cartões)
-          =================================================== */}
-      <section className="px-6 sm:px-8 py-16">
-        <div className="max-w-6xl mx-auto">
-          <SectionHead
-            title="Entre na pista"
-            deck="Do primeiro contato teórico à primeira jam oficial. A porta de entrada é a mesma de sempre."
-            action={
-              <Link href="/participar" className="sw-btn px-6 py-3">
-                Guia do iniciante
-              </Link>
-            }
-          />
-
-          <div className="border-t border-accent/16">
-            {steps.map((step) => (
-              <div
-                key={step.num}
-                className="sw-row flex-col sm:flex-row sm:items-baseline gap-2 sm:gap-10 py-6"
-              >
-                <div className="flex items-baseline gap-4 sm:w-52 shrink-0">
-                  <span className="sw-idx text-[11px]">{step.num}</span>
-                  <span className="font-mono text-xs uppercase tracking-[0.2em] text-white">
-                    {step.title}
-                  </span>
-                </div>
-                <p className="text-ink/50 text-[13px] leading-relaxed max-w-xl">{step.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ===================================================
-          FECHAMENTO
-          =================================================== */}
-      <section className="px-6 sm:px-8 pt-12 pb-24">
-        <div className="sw-frame sw-ticks max-w-3xl mx-auto px-8 py-16 sm:py-20 text-center">
-          <h2 className="text-2xl sm:text-4xl leading-[1.25] tracking-[0.08em]">
-            Descubra.<br />Conecte.<br />Participe.
+        <div className="lg:col-span-7 space-y-8 relative z-10">
+          <h2 className="text-3xl sm:text-5xl font-display font-bold text-white uppercase leading-tight">
+            Combate tático sem bola na tração de oito rodas.
           </h2>
 
-          <p className="mt-8 text-ink/45 text-[13px] leading-relaxed max-w-md mx-auto">
-            O esporte cresceu, encheu ginásio e não fechou a porta. O próximo apito inicial
-            está a poucos passos.
+          <p className="text-slate-300 font-body text-base leading-relaxed">
+            O Derby Synthetica é a plataforma oficial que conecta atletas, ligas independentes, equipe de arbitragem e torcedores de flat track roller derby em todo o território nacional.
           </p>
 
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-            <Link href="/descobrir" className="sw-btn sw-btn-solid px-7 py-3">
-              Acervo
-            </Link>
-            <Link href="/participar" className="sw-btn px-7 py-3">
-              Aula experimental
-            </Link>
+          <p className="text-slate-400 font-body text-sm leading-relaxed">
+            Mantemos viva a essência da autogestão: quadras públicas, formação de atletas via Fresh Meat, arbitragem voluntária e a assembleia de atletas que decide cada regra do campeonato.
+          </p>
+
+          <div className="pt-2">
+            <SyntheticaButton href="/descobrir" badgeBg="bg-pink-500" badgeTextColor="text-white">
+              CONHECER O ACERVO
+            </SyntheticaButton>
           </div>
+        </div>
+      </section>
+
+      {/* ===================================================
+          3. O ACERVO
+          =================================================== */}
+      <section className="relative space-y-12 pt-8">
+        <div className="absolute top-0 left-0 font-display text-[clamp(6rem,22vw,16rem)] font-extrabold uppercase text-white/[0.03] select-none pointer-events-none leading-none z-0">
+          ACERVO
+        </div>
+
+        <div className="relative z-10 space-y-3">
+          <h2 className="text-3xl sm:text-5xl font-display font-bold text-white uppercase">
+            Conhecimento Prático para a Pista
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
+          {acervoCards.map((card) => (
+            <div
+              key={card.num}
+              className="p-8 rounded-3xl bg-white/[0.03] border border-white/10 flex flex-col justify-between space-y-8 hover:border-purple-400/50 hover:bg-white/[0.06] transition-all group"
+            >
+              <div className="space-y-4">
+                <span className="font-mono text-xs text-purple-400 font-bold block">
+                  {card.num}
+                </span>
+                <h3 className="text-xl font-display font-bold text-white uppercase group-hover:text-purple-300 transition-colors">
+                  {card.title}
+                </h3>
+                <p className="text-xs text-slate-300 font-body leading-relaxed">
+                  {card.desc}
+                </p>
+              </div>
+
+              <Link
+                href={card.link}
+                className="inline-flex items-center justify-between w-full pt-4 border-t border-white/10 font-mono text-xs text-white/90 group-hover:text-purple-300 transition-colors"
+              >
+                <span>EXPLORAR</span>
+                <span className="w-7 h-7 rounded-full bg-white/10 group-hover:bg-purple-500 group-hover:text-white flex items-center justify-center transition-colors text-xs font-bold">
+                  →
+                </span>
+              </Link>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex flex-col items-center justify-center pt-8 relative z-10">
+          <SyntheticaButton href="/descobrir" badgeBg="bg-purple-500" badgeTextColor="text-white">
+            VER TODOS OS ENSAIOS
+          </SyntheticaButton>
+        </div>
+      </section>
+
+      {/* ===================================================
+          4. PASSO A PASSO
+          =================================================== */}
+      <section className="relative space-y-12 pt-8">
+        <div className="space-y-3 relative z-10">
+          <h2 className="text-3xl sm:text-5xl font-display font-bold text-white uppercase">
+            O Caminho para Entrar na Pista
+          </h2>
+        </div>
+
+        <div className="space-y-6 relative z-10">
+          {processRows.map((proc) => (
+            <div
+              key={proc.title}
+              className="py-6 px-4 sm:px-8 rounded-2xl hover:bg-white/[0.02] transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-6"
+            >
+              <h3 className="text-3xl sm:text-4xl font-display font-extrabold text-white uppercase tracking-tight">
+                {proc.title}
+              </h3>
+
+              <div className="flex flex-col sm:flex-row sm:items-center gap-6 lg:max-w-xl">
+                <p className="text-xs sm:text-sm text-slate-300 font-body leading-relaxed flex-1">
+                  {proc.desc}
+                </p>
+                <Link
+                  href="/participar"
+                  className="w-10 h-10 rounded-full border border-white/25 hover:border-cyan-400 hover:bg-cyan-400 hover:text-black flex items-center justify-center transition-all text-sm shrink-0"
+                >
+                  →
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex items-center justify-between pt-6 relative z-10">
+          <SyntheticaButton href="/participar" badgeBg="bg-cyan-400" badgeTextColor="text-black">
+            AGENDAR AULA EXPERIMENTAL
+          </SyntheticaButton>
+        </div>
+      </section>
+
+      {/* ===================================================
+          5. FORMULÁRIO DE CONTATO (Apito)
+          =================================================== */}
+      <section className="relative grid grid-cols-1 lg:grid-cols-12 gap-12 items-center pt-8">
+        <div className="lg:col-span-5 relative flex items-center justify-center z-10">
+          <div className="relative z-10 w-full">
+            <FluidGlassSculpture variant="apito" alt="Apito Derby Synthetica" />
+          </div>
+        </div>
+
+        <div className="lg:col-span-7 space-y-6 relative z-10">
+          <h2 className="text-3xl sm:text-4xl font-display font-bold text-white uppercase">
+            Agende sua Aula Experimental
+          </h2>
+
+          {formSubmitted ? (
+            <div className="p-8 rounded-2xl bg-cyan-950/40 border border-cyan-400/50 space-y-3">
+              <h3 className="text-lg font-display font-bold text-cyan-300">
+                MENSAGEM ENVIADA COM SUCESSO
+              </h3>
+              <p className="text-xs text-slate-300 font-body">
+                Nossa equipe de recepção entrará em contato via e-mail para confirmar a data do seu treino de Fresh Meat.
+              </p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmitForm} className="space-y-4">
+              <div>
+                <input
+                  type="text"
+                  required
+                  placeholder="Seu Nome Completo"
+                  value={formData.nome}
+                  onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                  className="w-full px-5 py-3.5 rounded-xl bg-white/[0.04] border border-white/15 text-white font-mono text-xs placeholder:text-slate-500 focus:outline-none focus:border-cyan-400 transition-colors"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <input
+                  type="email"
+                  required
+                  placeholder="Seu E-mail"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full px-5 py-3.5 rounded-xl bg-white/[0.04] border border-white/15 text-white font-mono text-xs placeholder:text-slate-500 focus:outline-none focus:border-cyan-400 transition-colors"
+                />
+                <input
+                  type="tel"
+                  placeholder="Seu Telefone"
+                  value={formData.telefone}
+                  onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+                  className="w-full px-5 py-3.5 rounded-xl bg-white/[0.04] border border-white/15 text-white font-mono text-xs placeholder:text-slate-500 focus:outline-none focus:border-cyan-400 transition-colors"
+                />
+              </div>
+
+              <div>
+                <input
+                  type="text"
+                  placeholder="Sua Cidade / Liga de Interesse"
+                  value={formData.cidade}
+                  onChange={(e) => setFormData({ ...formData, cidade: e.target.value })}
+                  className="w-full px-5 py-3.5 rounded-xl bg-white/[0.04] border border-white/15 text-white font-mono text-xs placeholder:text-slate-500 focus:outline-none focus:border-cyan-400 transition-colors"
+                />
+              </div>
+
+              <div>
+                <textarea
+                  rows={4}
+                  required
+                  placeholder="Sua Mensagem ou Dúvida"
+                  value={formData.mensagem}
+                  onChange={(e) => setFormData({ ...formData, mensagem: e.target.value })}
+                  className="w-full px-5 py-3.5 rounded-xl bg-white/[0.04] border border-white/15 text-white font-mono text-xs placeholder:text-slate-500 focus:outline-none focus:border-cyan-400 transition-colors resize-none"
+                />
+              </div>
+
+              <SyntheticaButton type="submit" badgeBg="bg-cyan-400" badgeTextColor="text-black">
+                ENVIAR MENSAGEM
+              </SyntheticaButton>
+            </form>
+          )}
         </div>
       </section>
     </div>

@@ -16,7 +16,6 @@ export interface Category {
   slug: CategorySlug;
   name: string;
   shortDesc: string;
-  /* A trilha pertence à categoria. É dela que cada conteúdo herda a sua. */
   trilha: Trilha;
 }
 
@@ -34,8 +33,6 @@ export interface Content {
   subtitle: string;
   category: CategorySlug;
   categoryName: string;
-  /* Derivada da categoria pela API, nunca gravada no conteúdo. Chega pronta
-     na leitura e por isso não é campo do formulário do painel editorial. */
   trilha: Trilha;
   summary: string;
   readTime: string;
@@ -47,8 +44,6 @@ export interface Content {
   sections: ContentSection[];
   relatedSlugs: string[];
   takeaways?: string[];
-  /* Texto livre, não mais um conjunto fechado: a API tipa `arquetipo_grafico`
-     como string e aceita qualquer valor que o painel editorial cadastrar. */
   graphicArchetype: string;
 }
 
@@ -74,6 +69,7 @@ export interface Team {
   homeTrack: string;
   openForNewSkaters: boolean;
   mapCoordinates: { xPercent: number; yPercent: number };
+  location?: { lat: number; lng: number };
 }
 
 export interface Event {

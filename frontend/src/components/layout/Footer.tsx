@@ -1,51 +1,85 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 
-const links = [
-  { label: 'Descobrir', path: '/descobrir' },
-  { label: 'Conectar', path: '/conectar' },
-  { label: 'Participar', path: '/participar' },
-];
-
 export const Footer: React.FC = () => (
-  /* relative z-10 é obrigatório: o Backdrop é fixed com z-0 e um rodapé
-     estático seria pintado por baixo dele, ou seja, invisível. */
-  <footer className="relative z-10 mt-32 border-t border-accent/20">
-    {/* Nota de autoria em fio próprio, acima da navegação: as assinaturas do
-        acervo são personagens, e isso precisa estar dito em algum lugar que
-        apareça em toda página, não só na página do ensaio. */}
-    <div className="max-w-6xl mx-auto px-6 sm:px-8 pt-8">
-      <p className="font-mono text-[10px] leading-relaxed tracking-[0.08em] text-ink/30 max-w-3xl">
-        Peça de ficção situada em 2047. O esporte, o vocabulário e as regras existem, e o
-        estado de coisas descrito é especulação. As assinaturas do acervo são personagens
-        editoriais, com nome de pista e cargo inventados: elas não correspondem a pessoas
-        reais nem aos integrantes do grupo que construiu o Derby Synthetica.
-      </p>
-    </div>
+  <footer className="relative z-10 mt-32 bg-black text-white pt-16 pb-12 overflow-hidden">
+    <div className="w-full space-y-12 relative z-10">
+      {/* ===================================================
+          1. TOP ROW: ABOUT | LOGO | SOCIALS
+          =================================================== */}
+      <div className="w-[88vw] max-w-[1650px] mx-auto px-6 sm:px-12 flex flex-col md:flex-row items-center justify-between gap-8">
+        {/* Left: About Link with Arrow */}
+        <div className="flex items-start gap-3 text-left">
+          <span className="text-xl leading-none text-slate-300">↘</span>
+          <div className="space-y-1">
+            <span className="block font-display text-sm font-bold text-white uppercase tracking-wider">
+              Sobre
+            </span>
+            <Link
+              href="/editorial"
+              className="block font-mono text-xs text-slate-400 hover:text-cyan-300 transition-colors"
+            >
+              Derby Synthetica
+            </Link>
+          </div>
+        </div>
 
-    <div className="max-w-6xl mx-auto px-6 sm:px-8 py-10 flex flex-col sm:flex-row items-center justify-between gap-6">
-      <Link href="/" className="font-display text-[11px] tracking-[0.2em]">
-        <span className="font-bold text-white">DERBY</span>
-        <span className="text-accent"> SYNTHETICA</span>
-      </Link>
+        {/* Center: Brand Name Logo */}
+        <Link href="/" className="font-display text-xl sm:text-2xl font-extrabold tracking-[0.25em] text-white uppercase hover:text-cyan-300 transition-colors">
+          DERBY SYNTHETICA
+        </Link>
 
-      <nav className="flex items-center gap-6">
-        {links.map((link) => (
-          <Link
-            key={link.path}
-            href={link.path}
-            className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink/55 hover:text-accent transition-colors"
+        {/* Right: Social Icons */}
+        <div className="flex items-center gap-6 text-slate-300">
+          <a
+            href="https://facebook.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Facebook"
+            className="hover:text-cyan-300 transition-colors font-mono text-sm"
           >
-            {link.label}
-          </Link>
-        ))}
-      </nav>
+            f
+          </a>
+          <a
+            href="https://instagram.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Instagram"
+            className="hover:text-cyan-300 transition-colors"
+          >
+            <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+            </svg>
+          </a>
+          <a
+            href="https://x.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="X"
+            className="hover:text-cyan-300 transition-colors font-mono text-sm"
+          >
+            𝕏
+          </a>
+        </div>
+      </div>
 
-      {/* Temporada fixa, e não o ano do sistema: o acervo é datado em 2047 e um
-          rodapé com o ano corrente desmentiria a moldura na primeira olhada. */}
-      <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink/40">
-        Temporada 2047 · Flat track · Brasil
-      </p>
+      {/* ===================================================
+          2. 100% WIDTH PHRASE WITH CLAMP (NO CLIPPING)
+          =================================================== */}
+      <div className="w-full px-4 sm:px-8 text-center overflow-hidden select-none py-6">
+        <h2 className="text-[clamp(1.6rem,5vw,6.2rem)] font-display font-extrabold uppercase text-white tracking-tight leading-none whitespace-nowrap block w-full">
+          Skate hard and turn left
+        </h2>
+      </div>
+
+      {/* ===================================================
+          3. BOTTOM COPYRIGHT
+          =================================================== */}
+      <div className="w-[88vw] max-w-[1650px] mx-auto px-6 sm:px-12 pt-8 border-t border-white/10 text-center font-mono text-xs text-slate-500">
+        <p>Derby Synthetica 2047. All rights reserved.</p>
+      </div>
     </div>
   </footer>
 );

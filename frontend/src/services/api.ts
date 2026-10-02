@@ -16,7 +16,7 @@
 
 /* Fallback para o endereço local: sem ele, esquecer o .env.local quebraria o
    portal com um erro de URL inválida em vez de simplesmente rodar na máquina. */
-const URL_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000').replace(/\/+$/, '');
+const URL_BASE = (process.env.NEXT_PUBLIC_API_URL || '/api').replace(/\/+$/, '');
 
 type ParametrosDeConsulta = Record<string, string | number | boolean | undefined | null>;
 
@@ -51,7 +51,11 @@ function montarUrl(caminho: string, parametros?: ParametrosDeConsulta): string {
   }
 
   const sufixo = consulta.toString();
-  return sufixo ? `${URL_BASE}${caminho}?${sufixo}` : `${URL_BASE}${caminho}`;
+  let base = URL_BASE;
+  if (typeof window === 'undefined' && base.startsWith('/')) {
+    base = `http://127.0.0.1:3000${base}`;
+  }
+  return sufixo ? `${base}${caminho}?${sufixo}` : `${base}${caminho}`;
 }
 
 /** Extrai do corpo da resposta a mensagem que o editor vai ler. */

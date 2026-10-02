@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { locationService } from '@/services/locationService';
 import { LocationVenue } from '@/types';
 import { SectionHead } from '@/components/common/SectionHead';
@@ -44,150 +45,171 @@ export default function Participar() {
   }, [cityFilter]);
 
   return (
-    <div className="px-6 sm:px-8 pt-32 pb-24">
-      <div className="max-w-6xl mx-auto">
-        <header className="mb-20">
-          <h1 className="text-[clamp(2rem,7vw,3.5rem)] tracking-[0.08em]">Participar</h1>
-          <p className="mt-6 text-ink/45 text-[13px] sm:text-sm leading-relaxed max-w-xl">
+    <div className="px-6 sm:px-8 pt-28 pb-24 max-w-6xl mx-auto space-y-16">
+      <header className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        <div className="lg:col-span-8 space-y-3">
+          <h1 className="text-[clamp(2rem,6vw,3.5rem)] tracking-wider leading-tight">
+            <span style={{ fontFamily: "'Audiowide', cursive, sans-serif" }} className="text-white">
+              Participar do Esporte
+            </span>
+          </h1>
+          <p className="text-slate-300/80 text-xs sm:text-sm font-body leading-relaxed max-w-xl">
             Você não precisa saber patinar para começar. As ligas brasileiras ensinam desde o
             primeiro equilíbrio até o contato de jogo.
           </p>
-        </header>
+        </div>
 
-        {/* 01: Jornada (era uma linha do tempo de cinco cartões) */}
-        <section className="mb-28">
-          <SectionHead title="Do zero à primeira jam" />
-
-          <div className="border-t border-accent/16">
-            {journey.map((step) => (
-              <div
-                key={step.num}
-                className="sw-row flex-col sm:flex-row sm:items-baseline gap-2 sm:gap-10 py-6"
-              >
-                <div className="flex items-baseline gap-4 sm:w-56 shrink-0">
-                  <span className="sw-idx text-[11px]">{step.num}</span>
-                  <span className="font-mono text-xs uppercase tracking-[0.18em] text-white">
-                    {step.title}
-                  </span>
-                </div>
-                <p className="text-ink/50 text-[13px] leading-relaxed max-w-xl">{step.desc}</p>
-              </div>
-            ))}
+        {/* Showcase Floating Image */}
+        <div className="lg:col-span-4 flex justify-center lg:justify-end">
+          <div className="relative w-40 h-40 sm:w-52 sm:h-52 animate-[pulse_4s_ease-in-out_infinite]">
+            <div className="absolute inset-0 bg-amber-500/20 rounded-full blur-2xl pointer-events-none" />
+            <Image
+              src="/imagens/apito.webp"
+              alt="Apito Derby Synthetica"
+              width={220}
+              height={220}
+              priority
+              className="relative z-10 w-full h-full object-contain drop-shadow-[0_0_30px_rgba(255,184,0,0.4)]"
+            />
           </div>
-        </section>
+        </div>
+      </header>
 
-        {/* 02: Kit de proteção */}
-        <section className="mb-28">
-          <SectionHead
-            title="Kit obrigatório"
-            deck="Ninguém entra na pista sem o conjunto completo. Muitas ligas emprestam proteções nas primeiras semanas."
-            /* Aponta para o acervo sem filtro: a categoria `equipamentos` do
-               mock antigo não existe mais, e um `cat=` inválido abriria a tela
-               com chip aceso e zero resultado. */
-            action={
-              <Link
-                href="/descobrir"
-                className="font-mono text-[11px] uppercase tracking-[0.2em] text-ink/50 hover:text-accent transition-colors whitespace-nowrap"
+      {/* 01: Jornada */}
+      <section>
+        <SectionHead title="Do zero à primeira jam" />
+
+        <div className="space-y-3 mt-6">
+          {journey.map((step) => (
+            <div key={step.num} className="glossy-card p-5 border border-white/10 hover:border-cyan-400/40 flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="flex items-center gap-3 sm:w-56 shrink-0">
+                <span className="w-7 h-7 rounded-md bg-cyan-950 border border-cyan-500/40 flex items-center justify-center font-mono text-xs text-cyan-300 font-bold">
+                  {step.num}
+                </span>
+                <span style={{ fontFamily: "'Audiowide', cursive, sans-serif" }} className="text-xs font-semibold uppercase tracking-wider text-white">
+                  {step.title}
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm text-slate-300/80 font-body leading-relaxed flex-1">
+                {step.desc}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 02: Kit de proteção */}
+      <section>
+        <SectionHead
+          title="Kit de Proteção Obrigatório"
+          deck="Ninguém entra na pista sem o conjunto completo. Muitas ligas emprestam proteções nas primeiras semanas."
+          action={
+            <Link
+              href="/descobrir"
+              className="font-mono text-xs uppercase tracking-widest text-cyan-400 hover:text-cyan-300"
+            >
+              Ver ensaios no acervo →
+            </Link>
+          }
+        />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-6">
+          {gear.map((item) => {
+            const isChecked = checked[item.id];
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setChecked((prev) => ({ ...prev, [item.id]: !prev[item.id] }))}
+                aria-pressed={isChecked}
+                className={`p-4 rounded-xl border text-left cursor-pointer transition-all flex items-center gap-3 ${
+                  isChecked
+                    ? 'bg-cyan-950/40 border-cyan-400/50 shadow-[0_0_15px_rgba(0,240,255,0.15)]'
+                    : 'glossy-card border-white/10 opacity-70'
+                }`}
               >
-                Ver o acervo →
-              </Link>
-            }
-          />
-
-          <div className="border-t border-accent/16">
-            {gear.map((item) => {
-              const isChecked = checked[item.id];
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setChecked((prev) => ({ ...prev, [item.id]: !prev[item.id] }))}
-                  aria-pressed={isChecked}
-                  className="sw-row w-full py-5 text-left cursor-pointer select-none"
-                >
-                  <span className={`sw-check self-center ${isChecked ? 'sw-check-on' : ''}`}>×</span>
-                  <span
-                    className={`font-mono text-xs uppercase tracking-[0.16em] shrink-0 sm:w-64 transition-colors ${
-                      isChecked ? 'text-white' : 'text-ink/50'
-                    }`}
-                  >
+                <span className={`w-5 h-5 rounded flex items-center justify-center font-mono text-xs font-bold shrink-0 ${isChecked ? 'bg-cyan-400 text-black' : 'border border-white/20 text-white/30'}`}>
+                  {isChecked ? '✓' : ''}
+                </span>
+                <div>
+                  <span style={{ fontFamily: "'Audiowide', cursive, sans-serif" }} className={`text-xs font-semibold uppercase block ${isChecked ? 'text-cyan-300' : 'text-white/60'}`}>
                     {item.title}
                   </span>
-                  <span className="hidden sm:block text-ink/40 text-[12px] leading-relaxed">
+                  <span className="text-xs font-body text-slate-300/70 mt-0.5 block">
                     {item.desc}
                   </span>
-                </button>
-              );
-            })}
-          </div>
-        </section>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </section>
 
-        {/* 03: Locais */}
-        <section>
-          <SectionHead
-            title="Onde praticar"
-            deck="Pistas de piso liso, ginásios com flat track demarcado e quadras com treinos abertos."
-            action={
-              <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                {cities.map((c) => (
-                  <Chip key={c} active={cityFilter === c} onClick={() => setCityFilter(c)}>
-                    {c === 'all' ? 'Todas' : c}
-                  </Chip>
-                ))}
-              </div>
-            }
-          />
+      {/* 03: Locais */}
+      <section>
+        <SectionHead
+          title="Onde Praticar"
+          deck="Pistas de piso liso, ginásios com flat track demarcado e quadras com treinos abertos."
+          action={
+            <div className="flex items-center gap-2 overflow-x-auto pb-1">
+              {cities.map((c) => (
+                <Chip key={c} active={cityFilter === c} onClick={() => setCityFilter(c)}>
+                  {c === 'all' ? 'Todas' : c}
+                </Chip>
+              ))}
+            </div>
+          }
+        />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {locations.map((loc) => (
-              <div key={loc.id} className="sw-frame sw-frame-live p-7">
-                <div className="flex items-baseline justify-between gap-4 mb-6">
-                  <span className="sw-tag">
-                    {loc.city}, {loc.state}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+          {locations.map((loc) => (
+            <div key={loc.id} className="glossy-card p-6 space-y-4">
+              <div className="flex items-center justify-between gap-4">
+                <span className="font-mono text-xs text-cyan-300 font-semibold">
+                  {loc.city}, {loc.state}
+                </span>
+                {loc.hasSkateLoan && (
+                  <span className="font-mono text-xs text-amber-400 font-semibold">
+                    Empresta Patins
                   </span>
-                  {loc.hasSkateLoan && (
-                    <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-live/70">
-                      Empresta patins
-                    </span>
-                  )}
+                )}
+              </div>
+
+              <h3 style={{ fontFamily: "'Audiowide', cursive, sans-serif" }} className="text-base font-bold text-white">{loc.name}</h3>
+
+              <div className="border-t border-white/10 pt-3 space-y-2 text-xs font-mono">
+                <div className="flex justify-between py-1 border-b border-white/5">
+                  <span className="text-white/40">Endereço</span>
+                  <span className="text-white/90 text-right">{loc.address}</span>
                 </div>
-
-                <h3 className="text-base leading-snug">{loc.name}</h3>
-
-                <div className="mt-6 border-t border-accent/16">
-                  {[
-                    { label: 'Endereço', value: loc.address },
-                    { label: 'Superfície', value: loc.surfaceType },
-                    { label: 'Sessões', value: loc.openSessions },
-                    { label: 'Contato', value: loc.contact },
-                  ].map((row) => (
-                    <div key={row.label} className="sw-row py-2.5">
-                      <span className="sw-label sw-label-bare shrink-0">{row.label}</span>
-                      <span className="sw-leader hidden sm:block" />
-                      <span className="text-[12px] text-ink/70 text-right">{row.value}</span>
-                    </div>
-                  ))}
+                <div className="flex justify-between py-1 border-b border-white/5">
+                  <span className="text-white/40">Superfície</span>
+                  <span className="text-cyan-300">{loc.surfaceType}</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-white/5">
+                  <span className="text-white/40">Sessões</span>
+                  <span className="text-white/90 text-right">{loc.openSessions}</span>
                 </div>
               </div>
-            ))}
-          </div>
-        </section>
+            </div>
+          ))}
+        </div>
+      </section>
 
-        {/* Fechamento */}
-        <section className="mt-28">
-          <div className="sw-frame sw-ticks px-8 py-16 text-center">
-            <h2 className="text-xl sm:text-3xl tracking-[0.08em]">
-              Pronta para a primeira volta?
-            </h2>
-            <p className="mt-6 text-ink/45 text-[13px] leading-relaxed max-w-md mx-auto">
-              As ligas estão com inscrições abertas para novas turmas.
-            </p>
-            <Link href="/conectar" className="sw-btn sw-btn-solid mt-9 px-7 py-3">
-              Conectar com uma liga
-            </Link>
-          </div>
-        </section>
-      </div>
+      {/* Call to Action */}
+      <section className="pt-8">
+        <div className="glossy-card p-8 sm:p-12 text-center space-y-4 max-w-2xl mx-auto">
+          <h2 style={{ fontFamily: "'Audiowide', cursive, sans-serif" }} className="text-2xl sm:text-3xl font-bold text-white">
+            Pronta para a primeira volta?
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-300/80 font-body max-w-md mx-auto">
+            As ligas brasileiras estão com inscrições abertas para turmas de Fresh Meat.
+          </p>
+          <Link href="/conectar" className="glossy-btn glossy-btn-magenta px-8 py-3 text-xs inline-block">
+            Conectar com uma Liga Agora →
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }

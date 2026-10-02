@@ -11,7 +11,10 @@ type Props = { params: Promise<{ slug: string }> };
    cliente, que não depende desta busca. */
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000').replace(/\/+$/, '');
+  let API_URL = (process.env.NEXT_PUBLIC_API_URL || '/api').replace(/\/+$/, '');
+  if (API_URL.startsWith('/')) {
+    API_URL = `http://127.0.0.1:3000${API_URL}`;
+  }
 
   const fallback: Metadata = {
     title: 'Derby Synthetica',

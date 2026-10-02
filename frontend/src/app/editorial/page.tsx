@@ -10,30 +10,6 @@ import { ListaConteudos } from '@/components/editorial/ListaConteudos';
 import { FormConteudo, ErroDeEnvio } from '@/components/editorial/FormConteudo';
 import { ModalConfirmacao } from '@/components/editorial/ModalConfirmacao';
 
-/**
- * Painel editorial do portal.
- *
- * É aqui que os quatro verbos do CRUD aparecem na interface. As outras rotas só
- * leem: quem cadastra, edita e remove ensaio é esta tela, e sem ela a API teria
- * escrita que nenhuma parte do portal exercita.
- *
- * Duas decisões estruturam o arquivo:
- *
- * O filtro vive em estado local, e não na URL como em `/descobrir`. Lá o
- * recorte é o que a pessoa quer compartilhar, e o link precisa abrir na trilha
- * certa. Aqui é ferramenta de trabalho de quem está com o painel aberto, e
- * levá-lo para a URL custaria uma fronteira de Suspense por causa do
- * `useSearchParams` para resolver problema que ninguém tem.
- *
- * O formulário substitui o índice em vez de aparecer abaixo dele. Ele tem duas
- * colunas e uma lista de seções que cresce sem limite: embaixo de uma tabela,
- * empurraria os botões de ação para fora da tela e deixaria dúvida sobre qual
- * ensaio está sendo editado.
- */
-
-/* O que está em curso agora. Cada operação tem nome próprio na tela porque
-   "carregando" não distingue uma gravação que ainda pode falhar de uma exclusão
-   que já saiu. */
 type Operacao = 'criando' | 'salvando' | 'excluindo' | null;
 
 const ROTULO_DA_OPERACAO: Record<Exclude<Operacao, null>, string> = {
@@ -42,7 +18,6 @@ const ROTULO_DA_OPERACAO: Record<Exclude<Operacao, null>, string> = {
   excluindo: 'Excluindo ensaio',
 };
 
-/** Recado de fim de operação. O tom decide se ele sai em magenta ou apagado. */
 interface Aviso {
   texto: string;
   tom: 'ok' | 'falha';
@@ -55,8 +30,6 @@ export default function EditorialPage() {
   const [conteudos, setConteudos] = useState<Content[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erroDeCarga, setErroDeCarga] = useState<string | null>(null);
-  /* Muda de valor para o efeito de carga rodar de novo. É o que recarrega o
-     índice depois de cada gravação, e o que o botão de nova tentativa usa. */
   const [tentativa, setTentativa] = useState(0);
 
   const [modo, setModo] = useState<'indice' | 'formulario'>('indice');
@@ -67,8 +40,6 @@ export default function EditorialPage() {
   const [aviso, setAviso] = useState<Aviso | null>(null);
 
   useEffect(() => {
-    /* Trocar o filtro antes de a resposta anterior voltar deixaria a tabela com
-       o recorte errado, pintado por uma consulta que já não vale. */
     let cancelado = false;
 
     async function carregar() {
@@ -86,8 +57,6 @@ export default function EditorialPage() {
         setConteudos(encontrados);
       } catch (falha) {
         if (cancelado) return;
-        /* Sem este ramo o painel ficaria em "Consultando acervo" para sempre,
-           que na tela é a mesma coisa que uma página quebrada. */
         setErroDeCarga(falha instanceof Error ? falha.message : 'O acervo não respondeu.');
         setConteudos([]);
       } finally {
@@ -101,10 +70,6 @@ export default function EditorialPage() {
     };
   }, [filtro, tentativa]);
 
-  /* O recado de sucesso se apaga sozinho. Ele confirma o que acabou de
-     acontecer, e passado o instante da confirmação vira só ruído em cima de
-     uma tabela que já mostra o resultado. A falha fica, porque ela pede
-     decisão. */
   useEffect(() => {
     if (aviso?.tom !== 'ok') return;
     const espera = setTimeout(() => setAviso(null), 6000);
@@ -115,9 +80,6 @@ export default function EditorialPage() {
 
   const descreverFalha = (falha: unknown): ErroDeEnvio => ({
     mensagem: falha instanceof Error ? falha.message : 'A API não respondeu.',
-    /* Status zero é a marca que o cliente HTTP usa para "a requisição nem
-       chegou ao servidor", e o formulário precisa dela para não tratar uma
-       queda de rede como recusa de campo. */
     status: falha instanceof ErroDaApi ? falha.status : 0,
   });
 
@@ -160,14 +122,8 @@ export default function EditorialPage() {
       });
 
       fecharFormulario();
-      /* Recarrega da API em vez de costurar na lista o que acabou de ser
-         enviado: os campos derivados (categoria, nome dela e trilha) só existem
-         na resposta do servidor, e remontá-los aqui seria inventar uma segunda
-         versão da regra que a API já aplica. */
       recarregar();
     } catch (falha) {
-      /* A tela fica no formulário de propósito: o que foi digitado continua
-         preenchido, e o erro acende o campo que causou a recusa. */
       setErroDeEnvio(descreverFalha(falha));
     } finally {
       setOperacao(null);
@@ -185,9 +141,6 @@ export default function EditorialPage() {
       recarregar();
     } catch (falha) {
       setAviso({ texto: descreverFalha(falha).mensagem, tom: 'falha' });
-      /* Fecha mesmo na falha: o modal já fez a pergunta e foi respondido, e o
-         motivo da recusa é lido melhor sobre a tabela, ao lado do ensaio que
-         continua lá. */
       setAExcluir(null);
     } finally {
       setOperacao(null);
@@ -198,29 +151,25 @@ export default function EditorialPage() {
     <div className="px-6 sm:px-8 pt-32 pb-24">
       <div className="max-w-6xl mx-auto">
         <header className="mb-12">
-          <span className="sw-label">Acesso da redação</span>
+          <h1 style={{ fontFamily: "'Audiowide', cursive, sans-serif" }} className="text-[clamp(2rem,7vw,3.5rem)] text-white font-bold">
+            Painel Editorial
+          </h1>
 
-          <h1 className="mt-4 text-[clamp(2rem,7vw,3.5rem)] tracking-[0.08em]">Painel editorial</h1>
-
-          <p className="mt-6 text-ink/45 text-[13px] sm:text-sm leading-relaxed max-w-xl">
+          <p className="mt-4 text-slate-300/80 text-[13px] sm:text-sm font-body leading-relaxed max-w-xl">
             A mesa onde o acervo é escrito. Cadastro, edição e remoção de ensaio falam direto
             com a API do portal, e o que for gravado aqui aparece em Descobrir na mesma hora.
           </p>
         </header>
 
-        {/* Faixa de estado: o que está em curso e o que acabou de acontecer.
-            Fica acima do conteúdo, e não junto de cada botão, porque a tela
-            troca de vista entre uma coisa e outra, e o recado de uma gravação
-            precisa sobreviver à volta do formulário para o índice. */}
         <div aria-live="polite" className="min-h-[1.5rem] mb-6">
           {operacao ? (
-            <p className="sw-caret font-mono text-[11px] uppercase tracking-[0.2em] text-accent">
+            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-pink-400 animate-pulse">
               {ROTULO_DA_OPERACAO[operacao]}
             </p>
           ) : aviso ? (
             <p
               className={`font-mono text-[11px] tracking-[0.14em] ${
-                aviso.tom === 'ok' ? 'text-ink/50' : 'text-accent'
+                aviso.tom === 'ok' ? 'text-cyan-300' : 'text-pink-400'
               }`}
             >
               {aviso.tom === 'ok' ? '> ' : '! '}
@@ -230,10 +179,6 @@ export default function EditorialPage() {
         </div>
 
         {modo === 'formulario' ? (
-          /* A `key` troca quando muda o ensaio editado, e é ela que remonta o
-             formulário com os valores certos. Sem isso, sair de um ensaio e
-             entrar em outro manteria em tela os campos do anterior, porque o
-             estado do formulário é inicializado uma vez só. */
           <FormConteudo
             key={emEdicao?.id ?? 'novo'}
             categorias={categorias}
@@ -253,15 +198,14 @@ export default function EditorialPage() {
                 total={carregando ? null : conteudos.length}
               />
 
-              {/* A ação principal da tela, e a única chapa magenta dela. */}
-              <button type="button" onClick={abrirCadastro} className="sw-btn sw-btn-solid px-6 py-3">
+              <button type="button" onClick={abrirCadastro} className="glossy-btn glossy-btn-magenta px-6 py-3">
                 Novo ensaio
               </button>
             </div>
 
             {carregando && conteudos.length === 0 ? (
-              <p className="sw-caret py-20 font-mono text-[11px] uppercase tracking-[0.24em] text-ink/40">
-                Consultando acervo
+              <p className="py-20 font-mono text-[11px] uppercase tracking-[0.24em] text-cyan-400 animate-pulse">
+                Consultando acervo...
               </p>
             ) : erroDeCarga ? (
               <EstadoDeErro className="py-16" mensagem={erroDeCarga} onTentarDeNovo={recarregar} />
@@ -290,13 +234,11 @@ export default function EditorialPage() {
         mensagem={
           <>
             <p>
-              <span className="text-ink/85">{aExcluir?.title}</span> sai do acervo e a página{' '}
-              <span className="font-mono text-[12px] text-accent">/conteudo/{aExcluir?.slug}</span>{' '}
+              <span className="text-white font-semibold">{aExcluir?.title}</span> sai do acervo e a página{' '}
+              <span className="font-mono text-[12px] text-pink-400">/conteudo/{aExcluir?.slug}</span>{' '}
               passa a responder que o ensaio não existe.
             </p>
-            <p className="mt-4">
-              {/* O aviso é literal: os dados vivem em lista na memória do
-                  backend, então só o que está no seed volta num restart. */}
+            <p className="mt-4 text-xs text-slate-400">
               Não há como desfazer pelo painel. Um ensaio escrito aqui não está no seed, e por
               isso não volta quando o servidor reinicia.
             </p>

@@ -23,6 +23,7 @@ export const mockTeams: Team[] = [
       type: 'Bout Oficial',
     },
     mapCoordinates: { xPercent: 62, yPercent: 70 },
+    location: { lat: -23.55052, lng: -46.633308 },
   },
   {
     id: 'team-rj-sugar-loaf',
@@ -46,6 +47,7 @@ export const mockTeams: Team[] = [
       type: 'Torneio Regional',
     },
     mapCoordinates: { xPercent: 74, yPercent: 65 },
+    location: { lat: -22.906847, lng: -43.172896 },
   },
   {
     id: 'team-pr-curitiba',
@@ -69,6 +71,7 @@ export const mockTeams: Team[] = [
       type: 'Open Scrimmage',
     },
     mapCoordinates: { xPercent: 55, yPercent: 78 },
+    location: { lat: -25.428954, lng: -49.267137 },
   },
   {
     id: 'team-rs-thunder',
@@ -92,6 +95,7 @@ export const mockTeams: Team[] = [
       type: 'Workshop Técnico',
     },
     mapCoordinates: { xPercent: 48, yPercent: 88 },
+    location: { lat: -30.034647, lng: -51.217658 },
   },
   {
     id: 'team-df-candangas',
@@ -115,6 +119,7 @@ export const mockTeams: Team[] = [
       type: 'Bout Exibição',
     },
     mapCoordinates: { xPercent: 58, yPercent: 48 },
+    location: { lat: -15.7975, lng: -47.8919 },
   },
   {
     id: 'team-mg-belo-horizonte',
@@ -138,5 +143,6 @@ export const mockTeams: Team[] = [
       type: 'Fresh Meat Open Day',
     },
     mapCoordinates: { xPercent: 68, yPercent: 58 },
+    location: { lat: -19.916681, lng: -43.934493 },
   },
 ];

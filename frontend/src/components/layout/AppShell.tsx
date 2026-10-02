@@ -10,14 +10,6 @@ interface AppShellProps {
   children: React.ReactNode;
 }
 
-/**
- * Moldura comum das cinco rotas: o que era o corpo do App.tsx com BrowserRouter.
- *
- * Existe como componente separado porque o layout.tsx precisa continuar Server
- * Component para exportar metadata, e splash, Header e Backdrop dependem de
- * estado e de hooks de navegação. Como o AppShell não remonta entre rotas, a
- * abertura continua aparecendo uma vez por carga de página, não a cada clique.
- */
 export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const [showSplash, setShowSplash] = useState(true);
 
@@ -25,10 +17,8 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
     <>
       {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
 
-      <div className="min-h-screen bg-black text-ink relative overflow-x-hidden">
-        <div className="fixed inset-0 pointer-events-none z-0">
-          <Backdrop />
-        </div>
+      <div className="min-h-screen bg-[#050611] text-ink relative overflow-x-hidden">
+        <Backdrop />
 
         <Header />
 
