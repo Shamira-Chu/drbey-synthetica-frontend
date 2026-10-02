@@ -16,7 +16,7 @@
 
 /* Fallback para o endereço local: sem ele, esquecer o .env.local quebraria o
    portal com um erro de URL inválida em vez de simplesmente rodar na máquina. */
-const URL_BASE = (process.env.NEXT_PUBLIC_API_URL || '/api').replace(/\/+$/, '');
+const URL_BASE = (process.env.NEXT_PUBLIC_API_URL || 'https://syntheticabackend.onrender.com').replace(/\/+$/, '');
 
 type ParametrosDeConsulta = Record<string, string | number | boolean | undefined | null>;
 
